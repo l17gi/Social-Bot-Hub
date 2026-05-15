@@ -1,22 +1,27 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: API specification for المطور platform
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
+  - name: social-accounts
+  - name: automations
+  - name: ai
+  - name: agent-apps
+  - name: admin
+  - name: dashboard
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +29,656 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /social-accounts:
+    get:
+      operationId: getSocialAccounts
+      tags: [social-accounts]
+      summary: Get user's social accounts
+      responses:
+        "200":
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SocialAccount"
+
+  /social-accounts/telegram/request-otp:
+    post:
+      operationId: requestTelegramOtp
+      tags: [social-accounts]
+      summary: Request Telegram OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramOtpRequest"
+      responses:
+        "200":
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpResponse"
+
+  /social-accounts/telegram/verify:
+    post:
+      operationId: verifyTelegramOtp
+      tags: [social-accounts]
+      summary: Verify Telegram OTP and connect account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramVerifyInput"
+      responses:
+        "201":
+          description: Account connected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialAccount"
+
+  /social-accounts/facebook:
+    post:
+      operationId: addFacebookAccount
+      tags: [social-accounts]
+      summary: Add Facebook account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FacebookAccountInput"
+      responses:
+        "201":
+          description: Account added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialAccount"
+
+  /social-accounts/instagram:
+    post:
+      operationId: addInstagramAccount
+      tags: [social-accounts]
+      summary: Add Instagram account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstagramAccountInput"
+      responses:
+        "201":
+          description: Account added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialAccount"
+
+  /social-accounts/{id}:
+    get:
+      operationId: getSocialAccount
+      tags: [social-accounts]
+      summary: Get single social account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialAccount"
+    delete:
+      operationId: deleteSocialAccount
+      tags: [social-accounts]
+      summary: Delete social account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /social-accounts/{id}/toggle:
+    post:
+      operationId: toggleSocialAccount
+      tags: [social-accounts]
+      summary: Toggle account active/inactive
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialAccount"
+
+  /automations:
+    get:
+      operationId: getAutomations
+      tags: [automations]
+      summary: Get user's automations
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Automation"
+    post:
+      operationId: createAutomation
+      tags: [automations]
+      summary: Create automation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+
+  /automations/{id}:
+    get:
+      operationId: getAutomation
+      tags: [automations]
+      summary: Get automation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Automation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+    patch:
+      operationId: updateAutomation
+      tags: [automations]
+      summary: Update automation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomationUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+    delete:
+      operationId: deleteAutomation
+      tags: [automations]
+      summary: Delete automation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /automations/{id}/start:
+    post:
+      operationId: startAutomation
+      tags: [automations]
+      summary: Start automation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+
+  /automations/{id}/stop:
+    post:
+      operationId: stopAutomation
+      tags: [automations]
+      summary: Stop automation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Stopped
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+
+  /automations/stats/summary:
+    get:
+      operationId: getAutomationStats
+      tags: [automations]
+      summary: Get automation statistics
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutomationStats"
+
+  /ai/conversations:
+    get:
+      operationId: getConversations
+      tags: [ai]
+      summary: Get AI conversations
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversation"
+    post:
+      operationId: createConversation
+      tags: [ai]
+      summary: Create new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConversationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+
+  /ai/conversations/{id}:
+    get:
+      operationId: getConversation
+      tags: [ai]
+      summary: Get conversation with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationWithMessages"
+    delete:
+      operationId: deleteConversation
+      tags: [ai]
+      summary: Delete conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /ai/chat:
+    post:
+      operationId: sendAiMessage
+      tags: [ai]
+      summary: Send message to AI (supports text and file content)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiChatInput"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiChatResponse"
+
+  /agent-apps:
+    get:
+      operationId: getAgentApps
+      tags: [agent-apps]
+      summary: Get user's agent apps
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgentApp"
+    post:
+      operationId: createAgentApp
+      tags: [agent-apps]
+      summary: Create agent app
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentAppInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentApp"
+
+  /agent-apps/{id}:
+    get:
+      operationId: getAgentApp
+      tags: [agent-apps]
+      summary: Get agent app
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: App
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentApp"
+    patch:
+      operationId: updateAgentApp
+      tags: [agent-apps]
+      summary: Update agent app
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentAppUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentApp"
+    delete:
+      operationId: deleteAgentApp
+      tags: [agent-apps]
+      summary: Delete agent app
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/activity:
+    get:
+      operationId: getDashboardActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      responses:
+        "200":
+          description: Activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /admin/users:
+    get:
+      operationId: adminGetUsers
+      tags: [admin]
+      summary: Admin - Get all users
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /admin/users/{id}:
+    patch:
+      operationId: adminUpdateUser
+      tags: [admin]
+      summary: Admin - Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: adminDeleteUser
+      tags: [admin]
+      summary: Admin - Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/stats:
+    get:
+      operationId: adminGetStats
+      tags: [admin]
+      summary: Admin - Get platform statistics
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/social-accounts:
+    get:
+      operationId: adminGetSocialAccounts
+      tags: [admin]
+      summary: Admin - Get all social accounts
+      responses:
+        "200":
+          description: All social accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SocialAccount"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +686,433 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        isActive:
+          type: boolean
+        avatarUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, username, email, role, isActive, createdAt]
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+      required: [user, token]
+
+    RegisterInput:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 6
+      required: [username, email, password]
+
+    LoginInput:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required: [email, password]
+
+    SocialAccount:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        platform:
+          type: string
+        accountName:
+          type: string
+        phoneNumber:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        status:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        followersCount:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+      required: [id, userId, platform, accountName, isActive, status, createdAt]
+
+    TelegramOtpRequest:
+      type: object
+      properties:
+        phoneNumber:
+          type: string
+      required: [phoneNumber]
+
+    OtpResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        phoneCodeHash:
+          type: string
+      required: [message, phoneCodeHash]
+
+    TelegramVerifyInput:
+      type: object
+      properties:
+        phoneNumber:
+          type: string
+        phoneCode:
+          type: string
+        phoneCodeHash:
+          type: string
+      required: [phoneNumber, phoneCode, phoneCodeHash]
+
+    FacebookAccountInput:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        accountName:
+          type: string
+      required: [username, password, accountName]
+
+    InstagramAccountInput:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        accountName:
+          type: string
+      required: [username, password, accountName]
+
+    Automation:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        socialAccountId:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        config:
+          type: object
+        messagesSent:
+          type: integer
+        targetGroups:
+          type: ["string", "null"]
+        aiModel:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        lastRunAt:
+          type: ["string", "null"]
+      required: [id, userId, socialAccountId, name, type, status, messagesSent, createdAt]
+
+    AutomationInput:
+      type: object
+      properties:
+        socialAccountId:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+        config:
+          type: object
+        targetGroups:
+          type: string
+        aiModel:
+          type: string
+      required: [socialAccountId, name, type]
+
+    AutomationUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        config:
+          type: object
+        targetGroups:
+          type: string
+        aiModel:
+          type: string
+        status:
+          type: string
+
+    AutomationStats:
+      type: object
+      properties:
+        totalAutomations:
+          type: integer
+        activeAutomations:
+          type: integer
+        totalMessagesSent:
+          type: integer
+        successRate:
+          type: number
+      required: [totalAutomations, activeAutomations, totalMessagesSent, successRate]
+
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        model:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, userId, title, model, createdAt, updatedAt]
+
+    ConversationInput:
+      type: object
+      properties:
+        title:
+          type: string
+        model:
+          type: string
+      required: [title, model]
+
+    AiMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        fileData:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, conversationId, role, content, createdAt]
+
+    ConversationWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        model:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/AiMessage"
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, userId, title, model, messages, createdAt, updatedAt]
+
+    AiChatInput:
+      type: object
+      properties:
+        conversationId:
+          type: integer
+        message:
+          type: string
+        model:
+          type: string
+        fileData:
+          type: string
+        fileName:
+          type: string
+      required: [conversationId, message, model]
+
+    AiChatResponse:
+      type: object
+      properties:
+        message:
+          $ref: "#/components/schemas/AiMessage"
+        conversationId:
+          type: integer
+      required: [message, conversationId]
+
+    AgentApp:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        instructions:
+          type: string
+        model:
+          type: string
+        tools:
+          type: array
+          items:
+            type: string
+        isPublic:
+          type: boolean
+        usageCount:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, userId, name, instructions, model, tools, isPublic, usageCount, createdAt, updatedAt]
+
+    AgentAppInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        instructions:
+          type: string
+        model:
+          type: string
+        tools:
+          type: array
+          items:
+            type: string
+        isPublic:
+          type: boolean
+      required: [name, instructions, model]
+
+    AgentAppUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        instructions:
+          type: string
+        model:
+          type: string
+        tools:
+          type: array
+          items:
+            type: string
+        isPublic:
+          type: boolean
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalSocialAccounts:
+          type: integer
+        activeSocialAccounts:
+          type: integer
+        activeAutomations:
+          type: integer
+        totalMessagesSent:
+          type: integer
+        aiConversations:
+          type: integer
+        agentApps:
+          type: integer
+        telegramAccounts:
+          type: integer
+        facebookAccounts:
+          type: integer
+        instagramAccounts:
+          type: integer
+      required: [totalSocialAccounts, activeSocialAccounts, activeAutomations, totalMessagesSent, aiConversations, agentApps, telegramAccounts, facebookAccounts, instagramAccounts]
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        platform:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, type, description, createdAt]
+
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        activeUsers:
+          type: integer
+        totalSocialAccounts:
+          type: integer
+        totalAutomations:
+          type: integer
+        totalMessages:
+          type: integer
+        totalAiConversations:
+          type: integer
+        platformBreakdown:
+          type: object
+      required: [totalUsers, activeUsers, totalSocialAccounts, totalAutomations, totalMessages, totalAiConversations, platformBreakdown]
+
+    AdminUserUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        isActive:
+          type: boolean
