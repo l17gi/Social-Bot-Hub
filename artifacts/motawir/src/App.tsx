@@ -3,17 +3,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
-import NotFound from "@/pages/not-found";
-import Login from "@/pages/login";
-import Register from "@/pages/register";
-import Dashboard from "@/pages/dashboard";
-import SocialAccounts from "@/pages/social-accounts";
-import AgentBuilder from "@/pages/agent-builder";
-import Automations from "@/pages/automations";
-import AI from "@/pages/ai";
-import Profile from "@/pages/profile";
-import Admin from "@/pages/admin";
-import Layout from "@/components/layout";
+import { lazy, Suspense } from "react";
+
+const NotFound = lazy(() => import("@/pages/not-found"));
+const Login = lazy(() => import("@/pages/login"));
+const Register = lazy(() => import("@/pages/register"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const SocialAccounts = lazy(() => import("@/pages/social-accounts"));
+const AgentBuilder = lazy(() => import("@/pages/agent-builder"));
+const Automations = lazy(() => import("@/pages/automations"));
+const AI = lazy(() => import("@/pages/ai"));
+const Profile = lazy(() => import("@/pages/profile"));
+const Admin = lazy(() => import("@/pages/admin"));
+const Layout = lazy(() => import("@/components/layout"));
 
 const queryClient = new QueryClient();
 
@@ -44,32 +46,34 @@ function ProtectedRoute({ component: Component, adminOnly = false }: { component
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
-      <Route path="/">
-        <ProtectedRoute component={Dashboard} />
-      </Route>
-      <Route path="/social-accounts">
-        <ProtectedRoute component={SocialAccounts} />
-      </Route>
-      <Route path="/automations">
-        <ProtectedRoute component={Automations} />
-      </Route>
-      <Route path="/ai">
-        <ProtectedRoute component={AI} />
-      </Route>
-      <Route path="/agent-builder">
-        <ProtectedRoute component={AgentBuilder} />
-      </Route>
-      <Route path="/profile">
-        <ProtectedRoute component={Profile} />
-      </Route>
-      <Route path="/admin">
-        <ProtectedRoute adminOnly component={Admin} />
-      </Route>
-      <Route component={NotFound} />
-    </Switch>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0a0e1a]"><div className="animate-pulse text-primary font-bold text-2xl drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]">جاري التحميل...</div></div>}>
+      <Switch>
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+        <Route path="/">
+          <ProtectedRoute component={Dashboard} />
+        </Route>
+        <Route path="/social-accounts">
+          <ProtectedRoute component={SocialAccounts} />
+        </Route>
+        <Route path="/automations">
+          <ProtectedRoute component={Automations} />
+        </Route>
+        <Route path="/ai">
+          <ProtectedRoute component={AI} />
+        </Route>
+        <Route path="/agent-builder">
+          <ProtectedRoute component={AgentBuilder} />
+        </Route>
+        <Route path="/profile">
+          <ProtectedRoute component={Profile} />
+        </Route>
+        <Route path="/admin">
+          <ProtectedRoute adminOnly component={Admin} />
+        </Route>
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 

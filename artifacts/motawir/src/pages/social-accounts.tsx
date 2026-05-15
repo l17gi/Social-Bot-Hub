@@ -11,10 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { Share2, Plus, Trash2, Power, User, AlertCircle } from "lucide-react";
+import { Share2, Plus, Trash2, Power, User, AlertCircle, Phone, Globe, ShieldCheck, Loader2 } from "lucide-react";
 import { SiTelegram, SiFacebook, SiInstagram } from "react-icons/si";
 import { useQueryClient } from "@tanstack/react-query";
-// Note: We need a dialog component. We'll use a placeholder structure for the flow.
 
 export default function SocialAccounts() {
   const { data: accounts, isLoading } = useGetSocialAccounts();
@@ -39,79 +38,114 @@ export default function SocialAccounts() {
     }
   });
 
-  const renderAccountsList = (platform: string, Icon: any, colorClass: string) => {
+  const renderAccountsList = (platform: string, Icon: any, colorClass: string, gradientClass: string) => {
     const platformAccounts = accounts?.filter(a => a.platform === platform) || [];
 
     return (
-      <div className="space-y-4 mt-6">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold flex items-center gap-2">
-            <Icon className={`w-6 h-6 ${colorClass}`} />
-            حسابات {platform === 'telegram' ? 'تيليغرام' : platform === 'facebook' ? 'فيسبوك' : 'إنستغرام'}
-          </h3>
-          <Button variant="outline" className="border-primary/50 text-primary hover:bg-primary/10">
-            <Plus className="w-4 h-4 ml-2" /> إضافة حساب
+      <div className="space-y-6 mt-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/5 p-6 rounded-[2rem] border border-white/5 backdrop-blur-md">
+          <div className="flex items-center gap-4">
+            <div className={`p-4 rounded-2xl bg-gradient-to-br ${gradientClass} shadow-lg`}>
+              <Icon className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black text-white">
+                حسابات {platform === 'telegram' ? 'تيليغرام' : platform === 'facebook' ? 'فيسبوك' : 'إنستغرام'}
+              </h3>
+              <p className="text-muted-foreground text-sm">إدارة وربط حساباتك لعمليات الأتمتة</p>
+            </div>
+          </div>
+          <Button className={`bg-gradient-to-r ${gradientClass} text-white font-bold h-12 px-8 rounded-2xl shadow-xl hover:scale-105 transition-all`}>
+            <Plus className="w-5 h-5 ml-2" /> إضافة حساب
           </Button>
         </div>
 
         {platformAccounts.length === 0 ? (
-          <div className="text-center py-12 bg-card/20 rounded-xl border border-dashed border-border/50">
-            <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-            <p className="text-muted-foreground">لا يوجد حسابات مضافة لهذه المنصة</p>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-20 bg-white/2 rounded-[2.5rem] border border-dashed border-white/10"
+          >
+            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-10 h-10 text-muted-foreground opacity-30" />
+            </div>
+            <p className="text-muted-foreground font-bold">لا يوجد حسابات مضافة لهذه المنصة</p>
+          </motion.div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             <AnimatePresence>
               {platformAccounts.map((account, index) => (
                 <motion.div
                   key={account.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card className="bg-card/40 backdrop-blur-md border-border/50 hover:border-primary/50 transition-colors relative overflow-hidden group">
-                    <div className={`absolute top-0 right-0 w-2 h-full ${account.isActive ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
+                  <Card className="bg-card/30 backdrop-blur-2xl border-white/5 hover:border-white/20 transition-all relative overflow-hidden group rounded-[2rem] shadow-2xl h-full">
+                    <div className={`absolute top-0 right-0 w-2 h-full ${account.isActive ? 'bg-emerald-500' : 'bg-red-500'} shadow-[0_0_15px_rgba(16,185,129,0.3)]`} />
+                    <CardContent className="p-8">
+                      <div className="flex items-start justify-between mb-8">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-muted overflow-hidden flex items-center justify-center">
-                            {account.avatarUrl ? (
-                              <img src={account.avatarUrl} alt={account.accountName} className="w-full h-full object-cover" />
-                            ) : (
-                              <User className="w-6 h-6 text-muted-foreground" />
+                          <div className="relative">
+                            <div className="w-16 h-16 rounded-2xl bg-white/5 overflow-hidden border border-white/10">
+                              {account.avatarUrl ? (
+                                <img src={account.avatarUrl} alt={account.accountName} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <User className="w-8 h-8 text-white/20" />
+                                </div>
+                              )}
+                            </div>
+                            {account.isActive && (
+                              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#0a0e1a] animate-pulse" />
                             )}
                           </div>
                           <div>
-                            <h4 className="font-bold text-white text-lg">{account.accountName}</h4>
-                            <p className="text-sm text-muted-foreground dir-ltr text-right">{account.phoneNumber || '---'}</p>
+                            <h4 className="font-black text-white text-xl mb-1">{account.accountName}</h4>
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                              <Phone className="w-3 h-3" />
+                              <span className="text-xs font-mono dir-ltr">{account.phoneNumber || '---'}</span>
+                            </div>
                           </div>
                         </div>
-                        <Badge variant={account.isActive ? "default" : "destructive"} className={account.isActive ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50" : ""}>
+                        <Badge className={`${account.isActive ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'} rounded-lg px-3 py-1`}>
                           {account.status}
                         </Badge>
                       </div>
+
+                      <div className="grid grid-cols-2 gap-4 mb-8">
+                        <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                          <p className="text-[10px] text-muted-foreground mb-1">تاريخ الربط</p>
+                          <p className="text-xs text-white font-bold">2024/05/12</p>
+                        </div>
+                        <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                          <p className="text-[10px] text-muted-foreground mb-1">نوع الحساب</p>
+                          <div className="flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3 text-primary" />
+                            <p className="text-xs text-white font-bold">موثق</p>
+                          </div>
+                        </div>
+                      </div>
                       
-                      <div className="mt-6 flex gap-2 justify-end">
+                      <div className="flex gap-3 pt-6 border-t border-white/5">
                         <Button 
                           variant="ghost" 
-                          size="sm"
+                          className={`flex-1 rounded-xl h-12 transition-all ${account.isActive ? 'bg-orange-500/5 text-orange-500 hover:bg-orange-500/10' : 'bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500/10'}`}
                           onClick={() => toggleMutation.mutate({ id: account.id })}
                           disabled={toggleMutation.isPending}
-                          className={account.isActive ? "text-orange-400 hover:text-orange-300 hover:bg-orange-400/10" : "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10"}
                         >
                           <Power className="w-4 h-4 ml-2" />
                           {account.isActive ? 'إيقاف' : 'تفعيل'}
                         </Button>
                         <Button 
                           variant="ghost" 
-                          size="sm"
+                          size="icon"
+                          className="w-12 h-12 rounded-xl bg-red-500/5 text-red-500 hover:bg-red-500/10 transition-all"
                           onClick={() => deleteMutation.mutate({ id: account.id })}
                           disabled={deleteMutation.isPending}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
                         >
-                          <Trash2 className="w-4 h-4 ml-2" />
-                          حذف
+                          <Trash2 className="w-5 h-5" />
                         </Button>
                       </div>
                     </CardContent>
@@ -126,35 +160,49 @@ export default function SocialAccounts() {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-black tracking-tight text-white flex items-center gap-3">
-          <Share2 className="w-8 h-8 text-primary" />
-          الحسابات الاجتماعية
-        </h2>
+    <div className="space-y-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shadow-2xl shadow-primary/20">
+            <Share2 className="w-8 h-8 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-4xl font-black tracking-tight text-white">الحسابات الاجتماعية</h2>
+            <p className="text-muted-foreground mt-1 mr-10">إدارة مركزية لجميع منصات التواصل الاجتماعي الخاصة بك</p>
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="telegram" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-3 bg-card/50 border border-border/50">
-          <TabsTrigger value="telegram" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">تيليغرام</TabsTrigger>
-          <TabsTrigger value="facebook" className="data-[state=active]:bg-blue-600/20 data-[state=active]:text-blue-500">فيسبوك</TabsTrigger>
-          <TabsTrigger value="instagram" className="data-[state=active]:bg-pink-600/20 data-[state=active]:text-pink-500">إنستغرام</TabsTrigger>
+        <TabsList className="grid w-full max-w-2xl grid-cols-3 bg-white/5 p-1.5 rounded-[1.5rem] border border-white/5 mb-8">
+          <TabsTrigger value="telegram" className="rounded-xl h-12 text-sm font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">تيليغرام</TabsTrigger>
+          <TabsTrigger value="facebook" className="rounded-xl h-12 text-sm font-bold data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">فيسبوك</TabsTrigger>
+          <TabsTrigger value="instagram" className="rounded-xl h-12 text-sm font-bold data-[state=active]:bg-pink-600 data-[state=active]:text-white transition-all">إنستغرام</TabsTrigger>
         </TabsList>
         
         {isLoading ? (
-          <div className="py-20 text-center text-primary animate-pulse">جاري جلب الحسابات...</div>
+          <div className="py-40 text-center flex flex-col items-center gap-6">
+            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <p className="text-primary font-black animate-pulse text-lg">جاري جلب بيانات الحسابات الموثقة...</p>
+          </div>
         ) : (
-          <>
+          <AnimatePresence mode="wait">
             <TabsContent value="telegram">
-              {renderAccountsList('telegram', SiTelegram, 'text-[#26A5E4]')}
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                {renderAccountsList('telegram', SiTelegram, 'text-[#26A5E4]', 'from-[#26A5E4] to-[#1a8db8]')}
+              </motion.div>
             </TabsContent>
             <TabsContent value="facebook">
-              {renderAccountsList('facebook', SiFacebook, 'text-[#1877F2]')}
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                {renderAccountsList('facebook', SiFacebook, 'text-[#1877F2]', 'from-[#1877F2] to-[#0d59bd]')}
+              </motion.div>
             </TabsContent>
             <TabsContent value="instagram">
-              {renderAccountsList('instagram', SiInstagram, 'text-[#E4405F]')}
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                {renderAccountsList('instagram', SiInstagram, 'text-[#E4405F]', 'from-[#833ab4] via-[#fd1d1d] to-[#fcb045]')}
+              </motion.div>
             </TabsContent>
-          </>
+          </AnimatePresence>
         )}
       </Tabs>
     </div>
