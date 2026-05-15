@@ -120,7 +120,9 @@ export default function Login() {
               </div>
             </div>
             
-            <h1 className="text-5xl font-black text-white mb-4 tracking-tight">المطور🌍🥇</h1>
+            <h1 className="text-5xl font-black text-white mb-4 tracking-tight">
+              المطور<span className="brand-emoji-globe">🌍</span><span className="brand-emoji-medal">🥇</span>
+            </h1>
             <div className="h-6">
               <p className="text-primary font-medium text-lg">{typewriterText}<span className="animate-pulse">|</span></p>
             </div>

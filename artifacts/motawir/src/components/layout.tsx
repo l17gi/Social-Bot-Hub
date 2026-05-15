@@ -51,7 +51,9 @@ export default function Layout({ children }: LayoutProps) {
           >
             م
           </motion.div>
-          <h1 className="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">المطور🌍🥇</h1>
+          <h1 className="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">
+            المطور<span className="brand-emoji-globe" style={{WebkitTextFillColor:"initial"}}>🌍</span><span className="brand-emoji-medal" style={{WebkitTextFillColor:"initial"}}>🥇</span>
+          </h1>
         </div>
 
         <nav className="flex-1 space-y-2">
@@ -118,7 +120,7 @@ export default function Layout({ children }: LayoutProps) {
              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-bold shadow-[0_0_15px_rgba(59,130,246,0.5)]">
               م
             </div>
-            <span className="font-bold">المطور🌍🥇</span>
+            <span className="font-bold">المطور<span className="brand-emoji-globe">🌍</span><span className="brand-emoji-medal">🥇</span></span>
           </div>
           
           <div className="flex-1 flex justify-end items-center gap-4">
