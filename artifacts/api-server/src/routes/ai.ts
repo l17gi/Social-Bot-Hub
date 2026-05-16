@@ -3,23 +3,34 @@ import { db } from "@workspace/db";
 import { conversationsTable, aiMessagesTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/auth";
+import { anthropic } from "@workspace/integrations-anthropic-ai";
+import { openrouter } from "@workspace/integrations-openrouter-ai";
 
 const router = Router();
 router.use(authMiddleware);
 
-const OPENROUTER_MODELS = [
-  "moonshotai/kimi-k2",
-  "moonshotai/kimi-k2.5",
-  "moonshotai/kimi-k2.6",
-  "moonshotai/kimi-latest",
-  "moonshotai/kimi-k2-thinking",
-];
-
 const ANTHROPIC_MODELS = [
+  "claude-opus-4-7",
+  "claude-opus-4-6",
   "claude-opus-4-5",
+  "claude-opus-4-1",
+  "claude-sonnet-4-6",
+  "claude-sonnet-4-5",
+  "claude-haiku-4-5",
   "claude-3-5-sonnet-20241022",
   "claude-3-haiku-20240307",
 ];
+
+function normalizeModel(model: string): { provider: "anthropic" | "openrouter"; model: string } {
+  const lower = model.toLowerCase();
+  if (lower === "kimi-k2" || lower === "kimi") return { provider: "openrouter", model: "moonshotai/kimi-k2" };
+  if (lower.includes("gemini")) return { provider: "openrouter", model: "google/gemini-2.0-flash-001" };
+  if (ANTHROPIC_MODELS.includes(model) || lower.startsWith("claude-")) {
+    const resolved = ANTHROPIC_MODELS.includes(model) ? model : "claude-opus-4-5";
+    return { provider: "anthropic", model: resolved };
+  }
+  return { provider: "openrouter", model };
+}
 
 function toConversation(c: any) {
   return {
@@ -73,11 +84,13 @@ router.delete("/conversations/:id", async (req, res) => {
 
 router.post("/chat", async (req, res) => {
   const { userId } = (req as any).user;
-  const { conversationId, message, model, fileData, fileName } = req.body;
-  if (!conversationId || !message || !model) {
+  const { conversationId, message, model: rawModel, fileData, fileName } = req.body;
+  if (!conversationId || !message || !rawModel) {
     res.status(400).json({ error: "Missing fields" });
     return;
   }
+
+  const { provider, model } = normalizeModel(rawModel);
 
   const [conv] = await db.select().from(conversationsTable)
     .where(and(eq(conversationsTable.id, conversationId), eq(conversationsTable.userId, userId)));
@@ -100,15 +113,21 @@ router.post("/chat", async (req, res) => {
     content: m.role === "user" && m.id === allMessages[allMessages.length - 1]?.id ? userContent : m.content
   }));
 
-  const systemPrompt = `أنت مساعد ذكاء اصطناعي متقدم لمنصة المطور للأتمتة. أجب دائماً باللغة العربية. كن دقيقاً ومفيداً.
-عند شرح الأكواد الطويلة (حتى 10000 سطر أو أكثر)، اشرح كل قسم بالتفصيل في رد واحد متكامل.
-استخدم تنسيق Markdown: \`\`\`language للأكواد، **للنص الغامق**، - للقوائم.`;
+  const systemPrompt = `أنت مساعد ذكاء اصطناعي متقدم لمنصة المطور للأتمتة. أجب دائماً باللغة العربية إلا إذا طُلب منك غير ذلك. كن دقيقاً ومفيداً وودوداً.
+عند شرح الأكواد، اشرح كل قسم بالتفصيل. استخدم تنسيق Markdown: \`\`\`language للأكواد، **للنص الغامق**، - للقوائم.`;
 
   let aiContent = "";
 
   try {
-    if (OPENROUTER_MODELS.includes(model)) {
-      const { openrouter } = await import("@workspace/integrations-openrouter-ai");
+    if (provider === "anthropic") {
+      const response = await anthropic.messages.create({
+        model,
+        max_tokens: 8192,
+        system: systemPrompt,
+        messages: msgs
+      });
+      aiContent = (response.content[0] as any).text || "لم يتم الحصول على رد.";
+    } else {
       const response = await openrouter.chat.completions.create({
         model,
         max_tokens: 8192,
@@ -118,21 +137,11 @@ router.post("/chat", async (req, res) => {
         ],
       });
       aiContent = response.choices[0]?.message?.content || "لم يتم الحصول على رد من النموذج.";
-    } else {
-      const { default: Anthropic } = await import("@anthropic-ai/sdk");
-      const client = new Anthropic();
-      const claudeModel = ANTHROPIC_MODELS.includes(model) ? model : "claude-opus-4-5";
-      const response = await client.messages.create({
-        model: claudeModel,
-        max_tokens: 8192,
-        system: systemPrompt,
-        messages: msgs
-      });
-      aiContent = (response.content[0] as any).text;
     }
   } catch (err: any) {
     req.log.error({ err }, "AI chat error");
-    aiContent = `عذراً، حدث خطأ في الاتصال بنموذج الذكاء الاصطناعي (${model}). يرجى المحاولة مرة أخرى أو اختيار نموذج آخر.`;
+    const errMsg = err?.message || String(err);
+    aiContent = `عذراً، حدث خطأ في الاتصال بنموذج الذكاء الاصطناعي (${model}). تفاصيل: ${errMsg.slice(0, 300)}`;
   }
 
   const [aiMsg] = await db.insert(aiMessagesTable).values({
